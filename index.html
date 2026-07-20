@@ -739,7 +739,7 @@
       background: #fff;
       border-radius: 2rem;
       padding: 1.8rem;
-      max-width: 1100px;
+      max-width: 1200px;
       width: 100%;
       max-height: 95vh;
       overflow-y: auto;
@@ -752,6 +752,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
     .modal-box .modal-header h2 {
       font-size: 1.4rem;
@@ -771,7 +773,7 @@
       flex: 1;
     }
     .modal-box .modal-body .preview {
-      flex: 1 1 45%;
+      flex: 1 1 40%;
       background: #f8fafd;
       border-radius: 1.2rem;
       overflow: hidden;
@@ -789,51 +791,56 @@
       background: #fff;
     }
     .modal-box .modal-body .editor-area {
-      flex: 1 1 45%;
+      flex: 1 1 50%;
       display: flex;
       flex-direction: column;
     }
     .modal-box .modal-body .editor-area .editor-toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #eef2f7;
+      gap: 0.3rem;
+      padding: 0.4rem 0;
+      border-bottom: 2px solid #eef2f7;
       margin-bottom: 0.5rem;
       align-items: center;
     }
+    .modal-box .modal-body .editor-area .editor-toolbar .divider {
+      width: 1px;
+      height: 24px;
+      background: #cbdde9;
+      margin: 0 0.2rem;
+    }
     .modal-box .modal-body .editor-area .editor-toolbar button {
-      background: #f0f4f9;
-      border: none;
-      padding: 0.3rem 0.8rem;
-      border-radius: 40px;
-      font-weight: 600;
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       transition: 0.1s;
       color: #2c4f6e;
       display: inline-flex;
       align-items: center;
-      gap: 0.3rem;
-    }
-    .modal-box .modal-body .editor-area .editor-toolbar button.active {
-      background: #1e3a5f;
-      color: #fff;
+      gap: 0.2rem;
+      min-width: 30px;
+      justify-content: center;
     }
     .modal-box .modal-body .editor-area .editor-toolbar button:hover {
-      background: #dfe7f0;
+      background: #e2eaf3;
+      border-color: #cbdde9;
     }
-    .modal-box .modal-body .editor-area .editor-toolbar button.active:hover {
-      background: #0f2b46;
+    .modal-box .modal-body .editor-area .editor-toolbar button.active {
+      background: #dce8f5;
+      border-color: #3b82f6;
     }
     .modal-box .modal-body .editor-area .editor-toolbar select,
     .modal-box .modal-body .editor-area .editor-toolbar input[type="color"] {
       border: 1px solid #cbdde9;
-      border-radius: 40px;
-      padding: 0.2rem 0.7rem;
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
       font-size: 0.8rem;
       background: #fff;
-      height: 32px;
+      height: 30px;
     }
     .modal-box .modal-body .editor-area .editor-content {
       flex: 1;
@@ -853,6 +860,10 @@
     .modal-box .modal-body .editor-area .editor-content:focus {
       border-color: #3b82f6;
     }
+    .modal-box .modal-body .editor-area .editor-content ul,
+    .modal-box .modal-body .editor-area .editor-content ol {
+      padding-left: 1.5rem;
+    }
     .modal-box .modal-actions {
       display: flex;
       gap: 0.8rem;
@@ -860,6 +871,7 @@
       justify-content: flex-end;
       border-top: 1px solid #eef2f7;
       padding-top: 1rem;
+      flex-wrap: wrap;
     }
     .modal-box .modal-actions button {
       padding: 0.5rem 1.5rem;
@@ -1105,11 +1117,22 @@
           <canvas id="textEditCanvas"></canvas>
         </div>
         <div class="editor-area">
-          <div class="editor-toolbar">
-            <button id="textBold" title="Bold"><b>B</b></button>
-            <button id="textItalic" title="Italic"><i>I</i></button>
-            <button id="textUnderline" title="Underline"><u>U</u></button>
-            <select id="textFontSize">
+          <div class="editor-toolbar" id="editorToolbar">
+            <button id="undoBtn" title="Undo">↩️</button>
+            <button id="redoBtn" title="Redo">↪️</button>
+            <span class="divider"></span>
+            <button id="boldBtn" title="Bold"><b>B</b></button>
+            <button id="italicBtn" title="Italic"><i>I</i></button>
+            <button id="underlineBtn" title="Underline"><u>U</u></button>
+            <span class="divider"></span>
+            <select id="fontFamily">
+              <option value="Arial">Arial</option>
+              <option value="Times New Roman">Times</option>
+              <option value="Courier New">Courier</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+            <select id="fontSize">
               <option value="12">12</option>
               <option value="14" selected>14</option>
               <option value="16">16</option>
@@ -1120,10 +1143,16 @@
               <option value="32">32</option>
             </select>
             <input type="color" id="textColor" value="#000000" />
-            <span style="font-size:0.7rem;color:#4a6a8a;">Select text to format</span>
+            <span class="divider"></span>
+            <button id="alignLeft" title="Align Left">≡</button>
+            <button id="alignCenter" title="Center">≡</button>
+            <button id="alignRight" title="Align Right">≡</button>
+            <span class="divider"></span>
+            <button id="bulletList" title="Bullet List">•</button>
+            <button id="numberedList" title="Numbered List">1.</button>
           </div>
           <div class="editor-content" id="textEditContent" contenteditable="true" spellcheck="true"></div>
-          <div style="font-size:0.75rem;color:#6c86a3;margin-top:0.3rem;">💡 Click inside to edit text. Use toolbar above for formatting.</div>
+          <div style="font-size:0.75rem;color:#6c86a3;margin-top:0.3rem;">💡 Click inside to edit. Use toolbar for formatting (bold, italic, lists, alignment, etc.)</div>
         </div>
       </div>
       <div class="modal-actions">
@@ -1198,11 +1227,19 @@
       const textEditRevert = $('textEditRevert');
       const textEditSave = $('textEditSave');
       const textEditClose = $('textEditClose');
-      const textBold = $('textBold');
-      const textItalic = $('textItalic');
-      const textUnderline = $('textUnderline');
-      const textFontSize = $('textFontSize');
+      const undoBtn = $('undoBtn');
+      const redoBtn = $('redoBtn');
+      const boldBtn = $('boldBtn');
+      const italicBtn = $('italicBtn');
+      const underlineBtn = $('underlineBtn');
+      const fontFamily = $('fontFamily');
+      const fontSize = $('fontSize');
       const textColor = $('textColor');
+      const alignLeft = $('alignLeft');
+      const alignCenter = $('alignCenter');
+      const alignRight = $('alignRight');
+      const bulletList = $('bulletList');
+      const numberedList = $('numberedList');
 
       // ─── Helpers ───
       function formatSize(bytes) {
@@ -1487,7 +1524,7 @@
               rotations: new Map(),
               pageOrder: [],
               notes: new Map(),
-              textEdits: new Map(), // pageNum -> { html, fontSize, color, bold, italic, underline }
+              textEdits: new Map(), // pageNum -> { html, fontSize, color, fontFamily, alignment, bold, italic, underline }
               watermark: null,
               isImage: isImage
             });
@@ -1624,7 +1661,7 @@
         // Show modal
         textEditModal.style.display = 'flex';
 
-        // Render page preview in the modal
+        // Render page preview
         try {
           const arrayBuffer = await item.file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -1639,15 +1676,14 @@
           console.warn('Preview render failed', err);
         }
 
-        // Load existing text edit or extract current text
+        // Load existing edit or extract text
         const existing = item.textEdits ? item.textEdits.get(pageNum) : null;
         if (existing && existing.html) {
           textEditContent.innerHTML = existing.html;
-          // Set font size and color from stored
-          if (existing.fontSize) textFontSize.value = existing.fontSize;
+          if (existing.fontSize) fontSize.value = existing.fontSize;
           if (existing.color) textColor.value = existing.color;
+          if (existing.fontFamily) fontFamily.value = existing.fontFamily;
         } else {
-          // Extract text from PDF page
           try {
             const arrayBuffer = await item.file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -1655,14 +1691,14 @@
             const textContent = await page.getTextContent();
             const fullText = textContent.items.map(item => item.str).join(' ');
             textEditContent.innerHTML = fullText;
-            // Reset formatting
-            textFontSize.value = '14';
+            fontSize.value = '14';
             textColor.value = '#000000';
+            fontFamily.value = 'Arial';
           } catch (err) {
             textEditContent.innerHTML = 'Failed to extract text.';
           }
         }
-        // Update active states for bold/italic/underline (we don't track them globally, just per selection)
+        // Update active states for buttons (we'll use execCommand)
         // We'll rely on execCommand for formatting.
       }
 
@@ -1672,12 +1708,12 @@
         const item = fileItems.find(f => f.id === fileId);
         if (!item) return;
         const html = textEditContent.innerHTML.trim();
-        const fontSize = textFontSize.value;
+        const fSize = fontSize.value;
         const color = textColor.value;
-        // Store as object with html and formatting metadata
+        const fFamily = fontFamily.value;
         if (!item.textEdits) item.textEdits = new Map();
         if (html && html !== '<br>' && html !== '') {
-          item.textEdits.set(pageNum, { html, fontSize, color });
+          item.textEdits.set(pageNum, { html, fontSize: fSize, color, fontFamily: fFamily });
         } else {
           item.textEdits.delete(pageNum);
         }
@@ -1858,7 +1894,7 @@
         setStatus('🧹 Watermark cleared.', '');
       }
 
-      // ─── Merge: apply all edits (including rich text) ───
+      // ─── Merge: apply all edits (rich text) ───
       async function mergePDFs() {
         if (isMerging) {
           setStatus('⏳ Merge in progress...', 'warning');
@@ -1916,7 +1952,8 @@
                 const html = editData.html || '';
                 const fontSize = parseInt(editData.fontSize) || 14;
                 const color = editData.color || '#000000';
-                // Clear the page area (white background)
+                const fontFamily = editData.fontFamily || 'Arial';
+                // Clear page (white background)
                 const { width, height } = page.getSize();
                 page.drawRectangle({
                   x: 0,
@@ -1926,13 +1963,18 @@
                   color: [1, 1, 1],
                   opacity: 1,
                 });
-                // Simple rendering: draw plain text lines with specified font size and color.
-                // We'll strip HTML tags and draw lines.
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                const text = tempDiv.textContent || '';
-                const lines = text.split('\n');
-                const font = await mergedPdf.embedFont(PDFLib.StandardFonts.Helvetica);
+
+                // Render HTML to PDF using a simple parser
+                const lines = htmlToPlainTextWithLines(html);
+                const fontMap = {
+                  'Arial': PDFLib.StandardFonts.Helvetica,
+                  'Times New Roman': PDFLib.StandardFonts.TimesRoman,
+                  'Courier New': PDFLib.StandardFonts.Courier,
+                  'Georgia': PDFLib.StandardFonts.TimesRoman, // fallback
+                  'Verdana': PDFLib.StandardFonts.Helvetica,
+                };
+                const fontName = fontMap[fontFamily] || PDFLib.StandardFonts.Helvetica;
+                const font = await mergedPdf.embedFont(fontName);
                 const rgbColor = hexToRgb(color);
                 let yPos = height - 40;
                 const lineHeight = fontSize * 1.2;
@@ -1946,6 +1988,8 @@
                       color: rgbColor,
                     });
                     yPos -= lineHeight;
+                  } else {
+                    yPos -= lineHeight * 0.5;
                   }
                 }
               }
@@ -2021,7 +2065,20 @@
         }
       }
 
-      // Helper to convert hex to rgb array [0-1]
+      // Simple HTML to plain text with lines (preserving paragraph/line breaks)
+      function htmlToPlainTextWithLines(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        const text = div.textContent || '';
+        // Split by newline or <br> tags? We'll just split by \n and also handle <br> by replacing with \n
+        const withBreaks = html.replace(/<br\s*\/?>/gi, '\n');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = withBreaks;
+        const raw = tempDiv.textContent || '';
+        return raw.split('\n').map(line => line.trim());
+      }
+
+      // Helper: hex to rgb [0-1]
       function hexToRgb(hex) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? [
@@ -2145,23 +2202,30 @@
       });
 
       // Rich text formatting (execCommand)
-      textBold.addEventListener('click', function() {
-        document.execCommand('bold', false, null);
+      function exec(cmd, value) {
+        document.execCommand(cmd, false, value);
+        // Update active states manually (we won't track but can)
+      }
+
+      undoBtn.addEventListener('click', () => exec('undo'));
+      redoBtn.addEventListener('click', () => exec('redo'));
+      boldBtn.addEventListener('click', () => exec('bold'));
+      italicBtn.addEventListener('click', () => exec('italic'));
+      underlineBtn.addEventListener('click', () => exec('underline'));
+      fontFamily.addEventListener('change', function() {
+        exec('fontName', this.value);
       });
-      textItalic.addEventListener('click', function() {
-        document.execCommand('italic', false, null);
-      });
-      textUnderline.addEventListener('click', function() {
-        document.execCommand('underline', false, null);
-      });
-      textFontSize.addEventListener('change', function() {
-        document.execCommand('fontSize', false, this.value);
+      fontSize.addEventListener('change', function() {
+        exec('fontSize', this.value);
       });
       textColor.addEventListener('input', function() {
-        document.execCommand('foreColor', false, this.value);
+        exec('foreColor', this.value);
       });
-
-      // Also update selection when content changes (we don't track)
+      alignLeft.addEventListener('click', () => exec('justifyLeft'));
+      alignCenter.addEventListener('click', () => exec('justifyCenter'));
+      alignRight.addEventListener('click', () => exec('justifyRight'));
+      bulletList.addEventListener('click', () => exec('insertUnorderedList'));
+      numberedList.addEventListener('click', () => exec('insertOrderedList'));
 
       addBlankBtn.addEventListener('click', function() {
         if (!selectedFileId) {
