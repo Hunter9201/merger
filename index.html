@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>PDF Forge Pro – Word‑Style Editor</title>
+  <title>PDF Forge Pro – In‑Place PDF Editor</title>
   <!-- pdf-lib & PDF.js -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js">
   </script>
@@ -720,14 +720,14 @@
       border: 1px dashed #cbdde9;
     }
 
-    /* ─── Modals ─── */
+    /* ─── In‑Place Edit Modal ─── */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -738,11 +738,11 @@
     .modal-box {
       background: #fff;
       border-radius: 2rem;
-      padding: 1.8rem;
-      max-width: 1200px;
+      padding: 1.5rem;
+      max-width: 1100px;
       width: 100%;
       max-height: 95vh;
-      overflow-y: auto;
+      overflow: hidden;
       box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
       display: flex;
       flex-direction: column;
@@ -751,7 +751,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
       flex-wrap: wrap;
       gap: 0.5rem;
     }
@@ -766,36 +766,7 @@
       cursor: pointer;
       color: #4a6a8a;
     }
-    .modal-box .modal-body {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      flex: 1;
-    }
-    .modal-box .modal-body .preview {
-      flex: 1 1 40%;
-      background: #f8fafd;
-      border-radius: 1.2rem;
-      overflow: hidden;
-      border: 1px solid #e2edf2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 300px;
-      padding: 0.5rem;
-    }
-    .modal-box .modal-body .preview canvas {
-      max-width: 100%;
-      max-height: 60vh;
-      object-fit: contain;
-      background: #fff;
-    }
-    .modal-box .modal-body .editor-area {
-      flex: 1 1 50%;
-      display: flex;
-      flex-direction: column;
-    }
-    .modal-box .modal-body .editor-area .editor-toolbar {
+    .modal-box .editor-toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: 0.3rem;
@@ -804,13 +775,13 @@
       margin-bottom: 0.5rem;
       align-items: center;
     }
-    .modal-box .modal-body .editor-area .editor-toolbar .divider {
+    .modal-box .editor-toolbar .divider {
       width: 1px;
       height: 24px;
       background: #cbdde9;
       margin: 0 0.2rem;
     }
-    .modal-box .modal-body .editor-area .editor-toolbar button {
+    .modal-box .editor-toolbar button {
       background: transparent;
       border: 1px solid transparent;
       padding: 0.2rem 0.6rem;
@@ -825,16 +796,16 @@
       min-width: 30px;
       justify-content: center;
     }
-    .modal-box .modal-body .editor-area .editor-toolbar button:hover {
+    .modal-box .editor-toolbar button:hover {
       background: #e2eaf3;
       border-color: #cbdde9;
     }
-    .modal-box .modal-body .editor-area .editor-toolbar button.active {
+    .modal-box .editor-toolbar button.active {
       background: #dce8f5;
       border-color: #3b82f6;
     }
-    .modal-box .modal-body .editor-area .editor-toolbar select,
-    .modal-box .modal-body .editor-area .editor-toolbar input[type="color"] {
+    .modal-box .editor-toolbar select,
+    .modal-box .editor-toolbar input[type="color"] {
       border: 1px solid #cbdde9;
       border-radius: 4px;
       padding: 0.2rem 0.4rem;
@@ -842,32 +813,48 @@
       background: #fff;
       height: 30px;
     }
-    .modal-box .modal-body .editor-area .editor-content {
+    .modal-box .page-container {
+      position: relative;
       flex: 1;
-      border: 1px solid #cbdde9;
-      border-radius: 0.8rem;
-      padding: 0.8rem;
-      min-height: 200px;
-      max-height: 50vh;
-      overflow-y: auto;
+      overflow: auto;
+      background: #f8fafd;
+      border-radius: 1.2rem;
+      border: 1px solid #e2edf2;
+      min-height: 400px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .modal-box .page-container canvas {
+      max-width: 100%;
+      display: block;
+      background: #fff;
+    }
+    .modal-box .page-container .editable-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
       outline: none;
       font-family: 'Inter', sans-serif;
       font-size: 14px;
       line-height: 1.6;
-      background: #fff;
-      transition: border 0.15s;
+      color: #000;
+      background: transparent;
+      overflow: hidden;
+      cursor: text;
+      word-wrap: break-word;
     }
-    .modal-box .modal-body .editor-area .editor-content:focus {
-      border-color: #3b82f6;
-    }
-    .modal-box .modal-body .editor-area .editor-content ul,
-    .modal-box .modal-body .editor-area .editor-content ol {
-      padding-left: 1.5rem;
+    .modal-box .page-container .editable-overlay:focus {
+      outline: none;
     }
     .modal-box .modal-actions {
       display: flex;
       gap: 0.8rem;
-      margin-top: 1.2rem;
+      margin-top: 1rem;
       justify-content: flex-end;
       border-top: 1px solid #eef2f7;
       padding-top: 1rem;
@@ -939,15 +926,8 @@
       .edit-toolbar .group {
         justify-content: center;
       }
-      .modal-box .modal-body {
-        flex-direction: column;
-      }
-      .modal-box .modal-body .preview {
-        flex: none;
-        min-height: 200px;
-      }
-      .modal-box .modal-body .editor-area .editor-content {
-        max-height: 30vh;
+      .modal-box .page-container {
+        min-height: 250px;
       }
     }
     @media (max-width: 480px) {
@@ -964,18 +944,18 @@
     }
     .page-grid::-webkit-scrollbar,
     .edit-sidebar::-webkit-scrollbar,
-    .modal-box .modal-body .editor-area .editor-content::-webkit-scrollbar {
+    .modal-box .page-container::-webkit-scrollbar {
       width: 5px;
     }
     .page-grid::-webkit-scrollbar-track,
     .edit-sidebar::-webkit-scrollbar-track,
-    .modal-box .modal-body .editor-area .editor-content::-webkit-scrollbar-track {
+    .modal-box .page-container::-webkit-scrollbar-track {
       background: #eef2f7;
       border-radius: 10px;
     }
     .page-grid::-webkit-scrollbar-thumb,
     .edit-sidebar::-webkit-scrollbar-thumb,
-    .modal-box .modal-body .editor-area .editor-content::-webkit-scrollbar-thumb {
+    .modal-box .page-container::-webkit-scrollbar-thumb {
       background: #b8cfe0;
       border-radius: 10px;
     }
@@ -987,7 +967,7 @@
     <div class="header">
       <div class="header-left">
         <h1>📄 PDF Forge Pro</h1>
-        <span class="badge">v3.0</span>
+        <span class="badge">v4.0</span>
       </div>
       <div class="header-stats">
         <span>📚</span>
@@ -1105,55 +1085,50 @@
     </div>
   </div>
 
-  <!-- ─── Modal for text editing (Word‑style) ─── -->
+  <!-- ─── In‑Place Text Edit Modal ─── -->
   <div class="modal-overlay" id="textEditModal" style="display:none;">
     <div class="modal-box">
       <div class="modal-header">
-        <h2>✏️ Edit Page Text — Full Page View</h2>
+        <h2>✏️ Edit PDF Page – Click anywhere to type</h2>
         <button class="close-btn" id="textEditClose">&times;</button>
       </div>
-      <div class="modal-body">
-        <div class="preview" id="textEditPreview">
-          <canvas id="textEditCanvas"></canvas>
-        </div>
-        <div class="editor-area">
-          <div class="editor-toolbar" id="editorToolbar">
-            <button id="undoBtn" title="Undo">↩️</button>
-            <button id="redoBtn" title="Redo">↪️</button>
-            <span class="divider"></span>
-            <button id="boldBtn" title="Bold"><b>B</b></button>
-            <button id="italicBtn" title="Italic"><i>I</i></button>
-            <button id="underlineBtn" title="Underline"><u>U</u></button>
-            <span class="divider"></span>
-            <select id="fontFamily">
-              <option value="Arial">Arial</option>
-              <option value="Times New Roman">Times</option>
-              <option value="Courier New">Courier</option>
-              <option value="Georgia">Georgia</option>
-              <option value="Verdana">Verdana</option>
-            </select>
-            <select id="fontSize">
-              <option value="12">12</option>
-              <option value="14" selected>14</option>
-              <option value="16">16</option>
-              <option value="18">18</option>
-              <option value="20">20</option>
-              <option value="24">24</option>
-              <option value="28">28</option>
-              <option value="32">32</option>
-            </select>
-            <input type="color" id="textColor" value="#000000" />
-            <span class="divider"></span>
-            <button id="alignLeft" title="Align Left">≡</button>
-            <button id="alignCenter" title="Center">≡</button>
-            <button id="alignRight" title="Align Right">≡</button>
-            <span class="divider"></span>
-            <button id="bulletList" title="Bullet List">•</button>
-            <button id="numberedList" title="Numbered List">1.</button>
-          </div>
-          <div class="editor-content" id="textEditContent" contenteditable="true" spellcheck="true"></div>
-          <div style="font-size:0.75rem;color:#6c86a3;margin-top:0.3rem;">💡 Click inside to edit. Use toolbar for formatting (bold, italic, lists, alignment, etc.)</div>
-        </div>
+      <div class="editor-toolbar" id="editorToolbar">
+        <button id="undoBtn" title="Undo">↩️</button>
+        <button id="redoBtn" title="Redo">↪️</button>
+        <span class="divider"></span>
+        <button id="boldBtn" title="Bold"><b>B</b></button>
+        <button id="italicBtn" title="Italic"><i>I</i></button>
+        <button id="underlineBtn" title="Underline"><u>U</u></button>
+        <span class="divider"></span>
+        <select id="fontFamily">
+          <option value="Arial">Arial</option>
+          <option value="Times New Roman">Times</option>
+          <option value="Courier New">Courier</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Verdana">Verdana</option>
+        </select>
+        <select id="fontSize">
+          <option value="12">12</option>
+          <option value="14" selected>14</option>
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+          <option value="24">24</option>
+          <option value="28">28</option>
+          <option value="32">32</option>
+        </select>
+        <input type="color" id="textColor" value="#000000" />
+        <span class="divider"></span>
+        <button id="alignLeft" title="Align Left">≡</button>
+        <button id="alignCenter" title="Center">≡</button>
+        <button id="alignRight" title="Align Right">≡</button>
+        <span class="divider"></span>
+        <button id="bulletList" title="Bullet List">•</button>
+        <button id="numberedList" title="Numbered List">1.</button>
+      </div>
+      <div class="page-container" id="pageContainer">
+        <canvas id="textEditCanvas"></canvas>
+        <div class="editable-overlay" id="textEditContent" contenteditable="true" spellcheck="true"></div>
       </div>
       <div class="modal-actions">
         <button class="btn-danger" id="textEditRevert">Revert</button>
@@ -1227,6 +1202,7 @@
       const textEditRevert = $('textEditRevert');
       const textEditSave = $('textEditSave');
       const textEditClose = $('textEditClose');
+      const pageContainer = $('pageContainer');
       const undoBtn = $('undoBtn');
       const redoBtn = $('redoBtn');
       const boldBtn = $('boldBtn');
@@ -1524,7 +1500,7 @@
               rotations: new Map(),
               pageOrder: [],
               notes: new Map(),
-              textEdits: new Map(), // pageNum -> { html, fontSize, color, fontFamily, alignment, bold, italic, underline }
+              textEdits: new Map(), // pageNum -> { html, fontSize, color, fontFamily }
               watermark: null,
               isImage: isImage
             });
@@ -1652,7 +1628,7 @@
         setStatus(`🔄 Rotated page ${pageNum} ${direction} (${newRot}°).`, '');
       }
 
-      // ─── Text editing ───
+      // ─── In‑Place Text Editing ───
       async function openTextEditor(fileId, pageNum) {
         const item = fileItems.find(f => f.id === fileId);
         if (!item) return;
@@ -1661,45 +1637,56 @@
         // Show modal
         textEditModal.style.display = 'flex';
 
-        // Render page preview
+        // Render the page as image on canvas
         try {
           const arrayBuffer = await item.file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
           const page = await pdf.getPage(pageNum);
           const viewport = page.getViewport({ scale: 1.2 });
           const canvas = textEditCanvas;
+          const context = canvas.getContext('2d');
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          const ctx = canvas.getContext('2d');
-          await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-        } catch (err) {
-          console.warn('Preview render failed', err);
-        }
+          await page.render({ canvasContext: context, viewport: viewport }).promise;
 
-        // Load existing edit or extract text
-        const existing = item.textEdits ? item.textEdits.get(pageNum) : null;
-        if (existing && existing.html) {
-          textEditContent.innerHTML = existing.html;
-          if (existing.fontSize) fontSize.value = existing.fontSize;
-          if (existing.color) textColor.value = existing.color;
-          if (existing.fontFamily) fontFamily.value = existing.fontFamily;
-        } else {
-          try {
-            const arrayBuffer = await item.file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            const page = await pdf.getPage(pageNum);
+          // Set canvas size as background for overlay
+          const container = pageContainer;
+          const overlay = textEditContent;
+          // Make overlay same size as canvas
+          canvas.style.width = '100%';
+          canvas.style.height = 'auto';
+          overlay.style.width = canvas.width + 'px';
+          overlay.style.height = canvas.height + 'px';
+          // Make overlay position absolute over canvas
+          overlay.style.position = 'absolute';
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.pointerEvents = 'auto';
+          // Set font size and family from stored or default
+          const existing = item.textEdits ? item.textEdits.get(pageNum) : null;
+          if (existing && existing.html) {
+            overlay.innerHTML = existing.html;
+            if (existing.fontSize) fontSize.value = existing.fontSize;
+            if (existing.color) textColor.value = existing.color;
+            if (existing.fontFamily) fontFamily.value = existing.fontFamily;
+          } else {
+            // Extract text from PDF
             const textContent = await page.getTextContent();
             const fullText = textContent.items.map(item => item.str).join(' ');
-            textEditContent.innerHTML = fullText;
+            overlay.innerHTML = fullText;
             fontSize.value = '14';
             textColor.value = '#000000';
             fontFamily.value = 'Arial';
-          } catch (err) {
-            textEditContent.innerHTML = 'Failed to extract text.';
           }
+          // Set initial font styles on overlay
+          overlay.style.fontFamily = fontFamily.value;
+          overlay.style.fontSize = fontSize.value + 'px';
+          overlay.style.color = textColor.value;
+          overlay.focus();
+        } catch (err) {
+          console.warn('Failed to load page', err);
+          setStatus('❌ Failed to load page for editing.', 'error');
         }
-        // Update active states for buttons (we'll use execCommand)
-        // We'll rely on execCommand for formatting.
       }
 
       function saveTextEdit() {
@@ -1894,7 +1881,7 @@
         setStatus('🧹 Watermark cleared.', '');
       }
 
-      // ─── Merge: apply all edits (rich text) ───
+      // ─── Merge: apply all edits ───
       async function mergePDFs() {
         if (isMerging) {
           setStatus('⏳ Merge in progress...', 'warning');
@@ -1953,8 +1940,8 @@
                 const fontSize = parseInt(editData.fontSize) || 14;
                 const color = editData.color || '#000000';
                 const fontFamily = editData.fontFamily || 'Arial';
-                // Clear page (white background)
                 const { width, height } = page.getSize();
+                // Clear page (white)
                 page.drawRectangle({
                   x: 0,
                   y: 0,
@@ -1963,14 +1950,13 @@
                   color: [1, 1, 1],
                   opacity: 1,
                 });
-
-                // Render HTML to PDF using a simple parser
+                // Render HTML to plain text lines
                 const lines = htmlToPlainTextWithLines(html);
                 const fontMap = {
                   'Arial': PDFLib.StandardFonts.Helvetica,
                   'Times New Roman': PDFLib.StandardFonts.TimesRoman,
                   'Courier New': PDFLib.StandardFonts.Courier,
-                  'Georgia': PDFLib.StandardFonts.TimesRoman, // fallback
+                  'Georgia': PDFLib.StandardFonts.TimesRoman,
                   'Verdana': PDFLib.StandardFonts.Helvetica,
                 };
                 const fontName = fontMap[fontFamily] || PDFLib.StandardFonts.Helvetica;
@@ -2065,12 +2051,8 @@
         }
       }
 
-      // Simple HTML to plain text with lines (preserving paragraph/line breaks)
+      // Helper: HTML to plain text lines
       function htmlToPlainTextWithLines(html) {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        const text = div.textContent || '';
-        // Split by newline or <br> tags? We'll just split by \n and also handle <br> by replacing with \n
         const withBreaks = html.replace(/<br\s*\/?>/gi, '\n');
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = withBreaks;
@@ -2201,10 +2183,11 @@
         }
       });
 
-      // Rich text formatting (execCommand)
+      // Rich text formatting for the overlay (execCommand)
       function exec(cmd, value) {
+        // Focus on the editable overlay first
+        textEditContent.focus();
         document.execCommand(cmd, false, value);
-        // Update active states manually (we won't track but can)
       }
 
       undoBtn.addEventListener('click', () => exec('undo'));
@@ -2214,12 +2197,16 @@
       underlineBtn.addEventListener('click', () => exec('underline'));
       fontFamily.addEventListener('change', function() {
         exec('fontName', this.value);
+        // Also update the overlay style for new text
+        textEditContent.style.fontFamily = this.value;
       });
       fontSize.addEventListener('change', function() {
         exec('fontSize', this.value);
+        textEditContent.style.fontSize = this.value + 'px';
       });
       textColor.addEventListener('input', function() {
         exec('foreColor', this.value);
+        textEditContent.style.color = this.value;
       });
       alignLeft.addEventListener('click', () => exec('justifyLeft'));
       alignCenter.addEventListener('click', () => exec('justifyCenter'));
@@ -2361,7 +2348,7 @@
       // ─── Init ───
       updateStats();
       showEditPlaceholder();
-      setStatus('✅ Ready — Scan, edit text like Word, and merge documents.', '');
+      setStatus('✅ Ready — Click ✏️ on any page to edit text directly on the PDF.', '');
 
     })();
   </script>
