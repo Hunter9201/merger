@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>PDF Forge Pro – Full Editor</title>
+  <title>PDF Forge Pro – Word‑Style Editor</title>
   <!-- pdf-lib & PDF.js -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js">
   </script>
@@ -33,7 +33,6 @@
       border-radius: 2.5rem;
       box-shadow: 0 30px 60px -20px rgba(0, 20, 40, 0.25);
       padding: 1.8rem 2rem 2.5rem;
-      transition: all 0.2s;
     }
 
     /* ─── Header ─── */
@@ -513,7 +512,7 @@
       font-size: 0.85rem;
     }
 
-    /* edit toolbar — WhatsApp style */
+    /* edit toolbar */
     .edit-pages {
       flex: 3;
       min-width: 280px;
@@ -596,7 +595,7 @@
     /* page grid */
     .page-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 1rem;
       max-height: 60vh;
       overflow-y: auto;
@@ -651,6 +650,7 @@
       display: flex;
       gap: 0.2rem;
       align-items: center;
+      flex-wrap: wrap;
     }
     .page-card .page-actions button {
       background: transparent;
@@ -670,6 +670,13 @@
     }
     .page-card .page-actions button.del:hover {
       background: #fee2e2;
+    }
+    .page-card .page-actions button.text-edit {
+      color: #1a5a8a;
+      background: #dce8f5;
+    }
+    .page-card .page-actions button.text-edit:hover {
+      background: #c5d8ed;
     }
     .page-card .page-actions input[type="checkbox"] {
       width: 14px;
@@ -709,6 +716,17 @@
       border-radius: 40px;
       font-weight: 600;
     }
+    .page-card .text-edited-badge {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: #10b981;
+      color: #fff;
+      font-size: 0.5rem;
+      padding: 0.05rem 0.4rem;
+      border-radius: 40px;
+      font-weight: 600;
+    }
     .no-pdf-selected {
       padding: 3rem 1rem;
       text-align: center;
@@ -718,7 +736,7 @@
       border: 1px dashed #cbdde9;
     }
 
-    /* ─── Modal for notes ─── */
+    /* ─── Modals ─── */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -736,8 +754,8 @@
       background: #fff;
       border-radius: 1.5rem;
       padding: 1.8rem;
-      max-width: 400px;
-      width: 90%;
+      max-width: 600px;
+      width: 95%;
       box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
     }
     .modal-box h3 {
@@ -751,7 +769,7 @@
     }
     .modal-box textarea {
       width: 100%;
-      height: 100px;
+      height: 200px;
       border: 1px solid #cbdde9;
       border-radius: 0.8rem;
       padding: 0.6rem;
@@ -779,6 +797,10 @@
     .modal-box .modal-actions .btn-secondary {
       background: #eef3fc;
       color: #2c4f6e;
+    }
+    .modal-box .modal-actions .btn-danger {
+      background: #ef4444;
+      color: #fff;
     }
 
     /* ─── Responsive ─── */
@@ -862,7 +884,7 @@
     <div class="header">
       <div class="header-left">
         <h1>📄 PDF Forge Pro</h1>
-        <span class="badge">v2.0</span>
+        <span class="badge">v3.0</span>
       </div>
       <div class="header-stats">
         <span>📚</span>
@@ -937,10 +959,10 @@
           <div class="no-pdf-selected" id="editPlaceholder">
             <div style="font-size:2.8rem;margin-bottom:0.4rem;">🖼️</div>
             <p>Select a document from the left to start editing.</p>
-            <p style="font-size:0.85rem;margin-top:0.3rem;">Drag to reorder · delete · rotate · annotate</p>
+            <p style="font-size:0.85rem;margin-top:0.3rem;">Drag to reorder · delete · rotate · annotate · edit text</p>
           </div>
           <div id="editEditor" style="display:none;">
-            <!-- toolbar — WhatsApp style -->
+            <!-- toolbar -->
             <div class="edit-toolbar" id="editToolbar">
               <div class="group">
                 <button class="tool-btn" id="addBlankBtn">➕ Blank</button>
@@ -971,7 +993,7 @@
     </div>
   </div>
 
-  <!-- Modal for notes -->
+  <!-- ─── Modal for notes ─── -->
   <div class="modal-overlay" id="noteModal" style="display:none;">
     <div class="modal-box">
       <h3>📝 Add Note to Page</h3>
@@ -980,6 +1002,20 @@
       <div class="modal-actions">
         <button class="btn-secondary" id="noteCancel">Cancel</button>
         <button class="btn-primary" id="noteSave">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Modal for text editing ─── -->
+  <div class="modal-overlay" id="textEditModal" style="display:none;">
+    <div class="modal-box">
+      <h3>✏️ Edit Page Text</h3>
+      <p>Edit the text content of this page. The updated text will replace the original in the merged PDF.</p>
+      <textarea id="textEditArea" placeholder="Edit text..."></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="textEditCancel">Cancel</button>
+        <button class="btn-danger" id="textEditRevert">Revert</button>
+        <button class="btn-primary" id="textEditSave">Save</button>
       </div>
     </div>
   </div>
@@ -1006,6 +1042,7 @@
       let currentBlobUrl = null;
       let isMerging = false;
       let noteTargetPage = null;
+      let textEditTarget = null; // { fileId, pageNum }
 
       // ─── DOM refs ───
       const $ = id => document.getElementById(id);
@@ -1040,6 +1077,11 @@
       const noteSave = $('noteSave');
       const scanCameraBtn = $('scanCameraBtn');
       const scanGalleryBtn = $('scanGalleryBtn');
+      const textEditModal = $('textEditModal');
+      const textEditArea = $('textEditArea');
+      const textEditCancel = $('textEditCancel');
+      const textEditRevert = $('textEditRevert');
+      const textEditSave = $('textEditSave');
 
       // ─── Helpers ───
       function formatSize(bytes) {
@@ -1200,16 +1242,19 @@
           const deleted = item.deletedPages || new Set();
           const rotations = item.rotations || new Map();
           const notes = item.notes || new Map();
+          const textEdits = item.textEdits || new Map(); // pageNum -> editedText
 
           const visiblePages = item.pageOrder.filter(p => !deleted.has(p));
           let gridHtml = '';
           for (const pg of visiblePages) {
             const rot = rotations.get(pg) || 0;
             const hasNote = notes.has(pg);
+            const hasTextEdit = textEdits.has(pg);
             gridHtml += `
                   <div class="page-card" data-page="${pg}" draggable="true" data-fileid="${fileId}">
                     <canvas id="page-canvas-${fileId}-${pg}"></canvas>
                     ${hasNote ? '<div class="note-indicator">📝</div>' : ''}
+                    ${hasTextEdit ? '<div class="text-edited-badge">✏️</div>' : ''}
                     <div class="page-info">
                       <span class="page-num">Pg ${pg}</span>
                       <div class="page-actions">
@@ -1217,6 +1262,7 @@
                         <button data-action="rotateLeft" data-page="${pg}" title="Rotate -90°">↺</button>
                         <button data-action="rotateRight" data-page="${pg}" title="Rotate +90°">↻</button>
                         <button class="del" data-action="deletePage" data-page="${pg}" title="Delete page">✕</button>
+                        <button class="text-edit" data-action="editText" data-page="${pg}" title="Edit text">✏️</button>
                         <input type="checkbox" class="page-select" data-page="${pg}" title="Select for extract" />
                       </div>
                     </div>
@@ -1306,7 +1352,6 @@
       function addFiles(filesArray) {
         let added = 0;
         for (const file of filesArray) {
-          // Accept PDFs and images (convert to PDF later)
           const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
           const isImage = file.type.startsWith('image/');
           if (isPDF || isImage) {
@@ -1321,6 +1366,7 @@
               rotations: new Map(),
               pageOrder: [],
               notes: new Map(),
+              textEdits: new Map(), // pageNum -> edited text
               watermark: null,
               isImage: isImage
             });
@@ -1361,7 +1407,6 @@
         });
       }
 
-      // ─── Handle image uploads ───
       async function handleFiles(filesArray) {
         const pdfFiles = [];
         const imageFiles = [];
@@ -1374,7 +1419,6 @@
             setStatus(`⚠️ Skipped "${file.name}": unsupported.`, 'warning');
           }
         }
-        // Convert images to PDF
         for (const imgFile of imageFiles) {
           try {
             const pdfFile = await imageToPDF(imgFile);
@@ -1450,6 +1494,59 @@
         setStatus(`🔄 Rotated page ${pageNum} ${direction} (${newRot}°).`, '');
       }
 
+      // ─── Text editing ───
+      async function openTextEditor(fileId, pageNum) {
+        const item = fileItems.find(f => f.id === fileId);
+        if (!item) return;
+        // Extract current text
+        try {
+          const arrayBuffer = await item.file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const fullText = textContent.items.map(item => item.str).join(' ');
+          // Store target
+          textEditTarget = { fileId, pageNum };
+          // Show modal with current text
+          textEditArea.value = fullText;
+          textEditModal.style.display = 'flex';
+        } catch (err) {
+          setStatus(`❌ Failed to extract text: ${err.message}`, 'error');
+        }
+      }
+
+      function saveTextEdit() {
+        if (!textEditTarget) return;
+        const { fileId, pageNum } = textEditTarget;
+        const item = fileItems.find(f => f.id === fileId);
+        if (!item) return;
+        const newText = textEditArea.value.trim();
+        if (newText) {
+          if (!item.textEdits) item.textEdits = new Map();
+          item.textEdits.set(pageNum, newText);
+        } else {
+          // Remove edit if empty
+          if (item.textEdits) item.textEdits.delete(pageNum);
+        }
+        textEditModal.style.display = 'none';
+        textEditTarget = null;
+        renderEditPages(fileId);
+        setStatus(`✏️ Text updated on page ${pageNum}.`, 'success');
+      }
+
+      function revertTextEdit() {
+        if (!textEditTarget) return;
+        const { fileId, pageNum } = textEditTarget;
+        const item = fileItems.find(f => f.id === fileId);
+        if (item && item.textEdits) {
+          item.textEdits.delete(pageNum);
+        }
+        textEditModal.style.display = 'none';
+        textEditTarget = null;
+        renderEditPages(fileId);
+        setStatus(`↩️ Reverted text changes on page ${pageNum}.`, '');
+      }
+
       // ─── Add blank page ───
       async function addBlankPage(fileId) {
         const item = fileItems.find(f => f.id === fileId);
@@ -1506,6 +1603,7 @@
             rotations: new Map(),
             pageOrder: [],
             notes: new Map(),
+            textEdits: new Map(),
             watermark: null
           });
           selectedFileId = newId;
@@ -1553,6 +1651,7 @@
             rotations: new Map(),
             pageOrder: [],
             notes: new Map(),
+            textEdits: new Map(),
             watermark: null
           });
           selectedFileId = newId;
@@ -1643,6 +1742,7 @@
             const deleted = item.deletedPages || new Set();
             const rotations = item.rotations || new Map();
             const notes = item.notes || new Map();
+            const textEdits = item.textEdits || new Map();
             const wm = item.watermark || null;
             const order = item.pageOrder || [];
             const keepPages = order.filter(p => !deleted.has(p) && p >= 1 && p <= totalSrcPages);
@@ -1657,7 +1757,39 @@
               const rot = rotations.get(originalPageNum) || 0;
               if (rot !== 0) page.setRotation(rot);
 
-              // Note
+              // ─── Text Edit: overlay new text ───
+              if (textEdits.has(originalPageNum)) {
+                const newText = textEdits.get(originalPageNum);
+                const { width, height } = page.getSize();
+                const font = await mergedPdf.embedFont(PDFLib.StandardFonts.Helvetica);
+                // Draw a white rectangle to cover old text (rough)
+                page.drawRectangle({
+                  x: 0,
+                  y: 0,
+                  width: width,
+                  height: height,
+                  color: [1, 1, 1],
+                  opacity: 1,
+                });
+                // Draw new text at top-left (we can improve positioning)
+                const fontSize = 14;
+                const lines = newText.split('\n');
+                let yPos = height - 40;
+                for (const line of lines) {
+                  if (line.trim()) {
+                    page.drawText(line, {
+                      x: 20,
+                      y: yPos,
+                      size: fontSize,
+                      font: font,
+                      color: [0, 0, 0],
+                    });
+                    yPos -= fontSize + 4;
+                  }
+                }
+              }
+
+              // ─── Note ───
               if (notes.has(originalPageNum)) {
                 const noteText = notes.get(originalPageNum);
                 const { width, height } = page.getSize();
@@ -1672,7 +1804,7 @@
                 });
               }
 
-              // Watermark
+              // ─── Watermark ───
               if (wm) {
                 const { width, height } = page.getSize();
                 const fontSize = wm.size || 36;
@@ -1784,6 +1916,10 @@
           rotatePage(fileId, page, 'right');
           return;
         }
+        if (action === 'editText') {
+          openTextEditor(fileId, page);
+          return;
+        }
       });
 
       // ─── Toolbar buttons ───
@@ -1816,6 +1952,20 @@
         if (e.target === this) {
           noteModal.style.display = 'none';
           noteTargetPage = null;
+        }
+      });
+
+      // Text edit modal
+      textEditCancel.addEventListener('click', function() {
+        textEditModal.style.display = 'none';
+        textEditTarget = null;
+      });
+      textEditRevert.addEventListener('click', revertTextEdit);
+      textEditSave.addEventListener('click', saveTextEdit);
+      textEditModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          textEditModal.style.display = 'none';
+          textEditTarget = null;
         }
       });
 
@@ -1861,7 +2011,6 @@
 
       // ─── Scan buttons ───
       scanCameraBtn.addEventListener('click', function() {
-        // Use native camera input
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
@@ -1954,7 +2103,7 @@
       // ─── Init ───
       updateStats();
       showEditPlaceholder();
-      setStatus('✅ Ready — Scan, edit, and merge documents.', '');
+      setStatus('✅ Ready — Scan, edit text, and merge documents.', '');
 
     })();
   </script>
