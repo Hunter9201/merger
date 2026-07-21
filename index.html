@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>PDF Forge Pro – Word‑Style Edit</title>
+  <title>PDF Forge Pro – Edit PDF like Word</title>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
@@ -137,11 +137,12 @@
     .modal-box .editor-toolbar button:hover { background: #e2eaf3; border-color: #cbdde9; }
     .modal-box .editor-toolbar button.active { background: #dce8f5; border-color: #3b82f6; }
     .modal-box .editor-toolbar select, .modal-box .editor-toolbar input[type="color"] { border: 1px solid #cbdde9; border-radius: 4px; padding: 0.2rem 0.4rem; font-size: 0.8rem; background: #fff; height: 30px; }
-    .modal-box .page-container { position: relative; flex: 1; overflow: auto; background: #f8fafd; border-radius: 1.2rem; border: 1px solid #e2edf2; min-height: 400px; display: flex; align-items: flex-start; justify-content: center; }
-    .modal-box .page-container canvas { max-width: 100%; display: block; background: #fff; }
-    .modal-box .page-container .editable-box { position: absolute; cursor: text; background: transparent; outline: none; font-family: inherit; font-size: inherit; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; padding: 2px 0; border: 1px solid transparent; transition: border 0.1s; }
-    .modal-box .page-container .editable-box:hover { border-color: rgba(59, 130, 246, 0.3); }
-    .modal-box .page-container .editable-box:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+    .modal-box .page-wrapper { position: relative; flex: 1; overflow: auto; background: #f8fafd; border-radius: 1.2rem; border: 1px solid #e2edf2; min-height: 400px; }
+    .modal-box .page-wrapper canvas { display: block; position: absolute; top: 0; left: 0; }
+    .modal-box .page-wrapper .editable-boxes { position: absolute; top: 0; left: 0; pointer-events: none; }
+    .modal-box .page-wrapper .editable-boxes .editable-box { position: absolute; cursor: text; background: transparent; outline: none; font-family: inherit; font-size: inherit; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; padding: 2px 1px; border: 1px solid transparent; transition: border 0.1s; pointer-events: auto; }
+    .modal-box .page-wrapper .editable-boxes .editable-box:hover { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.02); }
+    .modal-box .page-wrapper .editable-boxes .editable-box:focus { border-color: #3b82f6; background: rgba(59, 130, 246, 0.08); }
     .modal-box .modal-actions { display: flex; gap: 0.8rem; margin-top: 1rem; justify-content: flex-end; border-top: 1px solid #eef2f7; padding-top: 1rem; flex-wrap: wrap; }
     .modal-box .modal-actions button { padding: 0.5rem 1.5rem; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; }
     .modal-box .modal-actions .btn-primary { background: #1e3a5f; color: #fff; }
@@ -162,16 +163,16 @@
       .action-bar .btn { flex: 1; text-align: center; padding: 0.6rem 1rem; font-size: 0.8rem; }
       .edit-toolbar { flex-direction: column; align-items: stretch; }
       .edit-toolbar .group { justify-content: center; }
-      .modal-box .page-container { min-height: 250px; }
+      .modal-box .page-wrapper { min-height: 250px; }
     }
     @media (max-width: 480px) {
       .file-item { flex-direction: column; align-items: stretch; }
       .file-actions { justify-content: flex-end; }
       .page-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
     }
-    .page-grid::-webkit-scrollbar, .edit-sidebar::-webkit-scrollbar, .modal-box .page-container::-webkit-scrollbar { width: 5px; }
-    .page-grid::-webkit-scrollbar-track, .edit-sidebar::-webkit-scrollbar-track, .modal-box .page-container::-webkit-scrollbar-track { background: #eef2f7; border-radius: 10px; }
-    .page-grid::-webkit-scrollbar-thumb, .edit-sidebar::-webkit-scrollbar-thumb, .modal-box .page-container::-webkit-scrollbar-thumb { background: #b8cfe0; border-radius: 10px; }
+    .page-grid::-webkit-scrollbar, .edit-sidebar::-webkit-scrollbar, .modal-box .page-wrapper::-webkit-scrollbar { width: 5px; }
+    .page-grid::-webkit-scrollbar-track, .edit-sidebar::-webkit-scrollbar-track, .modal-box .page-wrapper::-webkit-scrollbar-track { background: #eef2f7; border-radius: 10px; }
+    .page-grid::-webkit-scrollbar-thumb, .edit-sidebar::-webkit-scrollbar-thumb, .modal-box .page-wrapper::-webkit-scrollbar-thumb { background: #b8cfe0; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -284,7 +285,7 @@
   <div class="modal-overlay" id="textEditModal" style="display:none;">
     <div class="modal-box">
       <div class="modal-header">
-        <h2>✏️ Edit PDF Page – Click any text to edit</h2>
+        <h2>✏️ Edit PDF Page – Click any text block to edit</h2>
         <button class="close-btn" id="textEditClose">&times;</button>
       </div>
       <div class="editor-toolbar" id="editorToolbar">
@@ -317,9 +318,9 @@
         <button id="bulletList" title="Bullet List">•</button>
         <button id="numberedList" title="Numbered List">1.</button>
       </div>
-      <div class="page-container" id="pageContainer">
+      <div class="page-wrapper" id="pageWrapper">
         <canvas id="textEditCanvas"></canvas>
-        <div id="editableBoxes" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
+        <div class="editable-boxes" id="editableBoxes"></div>
       </div>
       <div class="modal-actions">
         <button class="btn-danger" id="textEditRevert">Revert</button>
@@ -382,6 +383,7 @@
       const textEditModal = $('textEditModal');
       const textEditCanvas = $('textEditCanvas');
       const editableBoxes = $('editableBoxes');
+      const pageWrapper = $('pageWrapper');
       const textEditCancel = $('textEditCancel');
       const textEditRevert = $('textEditRevert');
       const textEditSave = $('textEditSave');
@@ -629,14 +631,40 @@
           const viewport = page.getViewport({ scale: 1.2 });
           const canvas = textEditCanvas;
           const ctx = canvas.getContext('2d');
-          canvas.width = viewport.width; canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
           await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+          // Set wrapper size
+          const wrapper = pageWrapper;
+          wrapper.style.position = 'relative';
+          wrapper.style.overflow = 'auto';
+          wrapper.style.width = viewport.width + 'px';
+          wrapper.style.height = viewport.height + 'px';
+
+          // Position canvas absolutely
+          canvas.style.position = 'absolute';
+          canvas.style.top = '0';
+          canvas.style.left = '0';
+          canvas.style.width = viewport.width + 'px';
+          canvas.style.height = viewport.height + 'px';
+          canvas.style.maxWidth = 'none';
+
+          // Set editable boxes container
+          const boxesContainer = editableBoxes;
+          boxesContainer.style.position = 'absolute';
+          boxesContainer.style.top = '0';
+          boxesContainer.style.left = '0';
+          boxesContainer.style.width = viewport.width + 'px';
+          boxesContainer.style.height = viewport.height + 'px';
+          boxesContainer.style.pointerEvents = 'none';
+          boxesContainer.innerHTML = '';
 
           // Extract text items with positions
           const textItems = await page.getTextContent();
           const items = textItems.items.map(item => ({
             x: item.transform[4] * 1.2,
-            y: (viewport.height - item.transform[5] * 1.2),
+            y: (viewport.height - item.transform[5] * 1.2) - (item.height * 1.2), // top of the text
             w: item.width * 1.2,
             h: item.height * 1.2,
             text: item.str,
@@ -644,38 +672,29 @@
             size: item.transform[0] * 1.2,
           }));
 
-          // Clear previous boxes
-          editableBoxes.innerHTML = '';
-
           // Load existing edits
           const existing = item.textEdits ? item.textEdits.get(pageNum) : null;
           const editMap = existing ? existing : [];
 
           // Create editable divs for each text item
-          const container = editableBoxes;
-          container.style.width = canvas.width + 'px';
-          container.style.height = canvas.height + 'px';
-          container.style.pointerEvents = 'none';
-
           for (let i = 0; i < items.length; i++) {
             const it = items[i];
             const div = document.createElement('div');
             div.className = 'editable-box';
-            div.style.position = 'absolute';
             div.style.left = it.x + 'px';
-            div.style.top = it.y - it.h + 'px';
+            div.style.top = it.y + 'px';
             div.style.width = Math.max(it.w, 20) + 'px';
             div.style.height = Math.max(it.h, 20) + 'px';
             div.style.fontSize = (it.size || 14) + 'px';
             div.style.fontFamily = it.font || 'Arial';
+            div.style.color = '#000';
             div.style.pointerEvents = 'auto';
             div.contentEditable = true;
             div.spellcheck = true;
-            // Check if we have an edit for this item (by position or text match)
+            // Check for existing edit
             let foundEdit = null;
             if (editMap && editMap.length) {
               for (const edit of editMap) {
-                // simple match by x,y proximity
                 if (Math.abs(edit.x - it.x) < 2 && Math.abs(edit.y - it.y) < 2) {
                   foundEdit = edit;
                   break;
@@ -689,21 +708,20 @@
               div.style.fontFamily = foundEdit.fontFamily || 'Arial';
             } else {
               div.textContent = it.text;
-              div.style.color = '#000';
             }
-            // Store original position and text for saving
+            // Store original position
             div.dataset.x = it.x;
             div.dataset.y = it.y;
             div.dataset.w = it.w;
             div.dataset.h = it.h;
-            container.appendChild(div);
+            boxesContainer.appendChild(div);
           }
 
           // Make container pointer-events auto so children can be edited
-          container.style.pointerEvents = 'auto';
+          boxesContainer.style.pointerEvents = 'auto';
 
           // Focus the first editable
-          if (container.children.length) container.children[0].focus();
+          if (boxesContainer.children.length) boxesContainer.children[0].focus();
 
         } catch(err) { console.warn('Failed to load page', err); setStatus('❌ Failed to load page for editing.', 'error'); }
       }
@@ -909,28 +927,25 @@
                   const fontName = fontMap[fontFamily] || PDFLib.StandardFonts.Helvetica;
                   const font = await mergedPdf.embedFont(fontName);
                   const rgbColor = hexToRgb(color);
-                  // Render the HTML content as plain text lines
+                  // Render HTML content as plain text
                   const temp = document.createElement('div');
                   temp.innerHTML = edit.html;
                   const text = temp.textContent || '';
                   const lines = text.split('\n');
-                  let yPos = height - edit.y; // since y is from top, we need to convert
-                  // Actually we stored y as from top, but PDF y is from bottom. We stored as top-left of box.
-                  // Use the stored y as top coordinate (from top), so we need to invert.
+                  // edit.y is top coordinate from top. We need to convert to PDF y (from bottom)
                   const top = edit.y;
-                  // Draw at top position from top
-                  let y = height - top - 10; // adjust
+                  let yPos = height - top - 10; // adjust baseline
                   const lineHeight = fontSize * 1.2;
                   for (const line of lines) {
                     if (line.trim()) {
                       page.drawText(line, {
                         x: edit.x + 2,
-                        y: y,
+                        y: yPos,
                         size: fontSize,
                         font: font,
                         color: rgbColor,
                       });
-                      y -= lineHeight;
+                      yPos -= lineHeight;
                     }
                   }
                 }
@@ -1028,37 +1043,21 @@
       textEditClose.addEventListener('click', function() { textEditModal.style.display = 'none'; textEditTarget = null; });
       textEditModal.addEventListener('click', function(e) { if (e.target === this) { textEditModal.style.display = 'none'; textEditTarget = null; } });
 
-      // Formatting for editable boxes - we need to apply to focused box
-      function execOnFocused(cmd, value) {
-        const sel = window.getSelection();
-        if (sel.rangeCount) {
-          const range = sel.getRangeAt(0);
-          const parent = range.commonAncestorContainer;
-          const box = parent.closest ? parent.closest('.editable-box') : null;
-          if (box) {
-            // Focus the box
-            box.focus();
-            // Apply execCommand to the box's content
-            document.execCommand(cmd, false, value);
-          }
-        }
-      }
-      // We'll use execCommand on the document, but we need to ensure the box is focused.
-      // Since the boxes are contenteditable, execCommand works on the current selection.
-      // So we just call execCommand and it will apply to the selected content.
-      undoBtn.addEventListener('click', () => document.execCommand('undo'));
-      redoBtn.addEventListener('click', () => document.execCommand('redo'));
-      boldBtn.addEventListener('click', () => document.execCommand('bold'));
-      italicBtn.addEventListener('click', () => document.execCommand('italic'));
-      underlineBtn.addEventListener('click', () => document.execCommand('underline'));
-      fontFamily.addEventListener('change', function() { document.execCommand('fontName', false, this.value); });
-      fontSize.addEventListener('change', function() { document.execCommand('fontSize', false, this.value); });
-      textColor.addEventListener('input', function() { document.execCommand('foreColor', false, this.value); });
-      alignLeft.addEventListener('click', () => document.execCommand('justifyLeft'));
-      alignCenter.addEventListener('click', () => document.execCommand('justifyCenter'));
-      alignRight.addEventListener('click', () => document.execCommand('justifyRight'));
-      bulletList.addEventListener('click', () => document.execCommand('insertUnorderedList'));
-      numberedList.addEventListener('click', () => document.execCommand('insertOrderedList'));
+      // Formatting - execCommand works on the focused editable element
+      function exec(cmd, value) { document.execCommand(cmd, false, value); }
+      undoBtn.addEventListener('click', () => exec('undo'));
+      redoBtn.addEventListener('click', () => exec('redo'));
+      boldBtn.addEventListener('click', () => exec('bold'));
+      italicBtn.addEventListener('click', () => exec('italic'));
+      underlineBtn.addEventListener('click', () => exec('underline'));
+      fontFamily.addEventListener('change', function() { exec('fontName', this.value); });
+      fontSize.addEventListener('change', function() { exec('fontSize', this.value); });
+      textColor.addEventListener('input', function() { exec('foreColor', this.value); });
+      alignLeft.addEventListener('click', () => exec('justifyLeft'));
+      alignCenter.addEventListener('click', () => exec('justifyCenter'));
+      alignRight.addEventListener('click', () => exec('justifyRight'));
+      bulletList.addEventListener('click', () => exec('insertUnorderedList'));
+      numberedList.addEventListener('click', () => exec('insertOrderedList'));
 
       addBlankBtn.addEventListener('click', function() { if (!selectedFileId) { setStatus('❌ Select a document first.', 'error'); return; } addBlankPage(selectedFileId); });
       extractBtn.addEventListener('click', function() { if (!selectedFileId) { setStatus('❌ Select a document first.', 'error'); return; } extractSelected(selectedFileId); });
